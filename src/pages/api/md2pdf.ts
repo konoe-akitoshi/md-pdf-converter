@@ -10,7 +10,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
-import rehypeKatex from "rehype-katex";
+import rehypeMathjax from "rehype-mathjax";
 import rehypeStringify from "rehype-stringify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -30,24 +30,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!title) title = "markdown";
     title = title.replace(/[\\\/:*?"<>|]/g, "").slice(0, 50);
 
-    // remarkパイプラインでMarkdown→HTML（GFM+数式対応）
+    // remarkパイプラインでMarkdown→HTML（GFM+数式対応, MathJax SVG出力）
     const file = await unified()
       .use(remarkParse)
       .use(remarkGfm)
       .use(remarkMath)
       .use(remarkRehype)
-      .use(rehypeKatex)
+      .use(rehypeMathjax)
       .use(rehypeStringify)
       .process(markdown);
 
     const htmlContent = String(file);
 
-    // 生成HTMLの一部をログ出力（デバッグ用）
-    console.log("=== htmlContent sample ===");
-    console.log(htmlContent.slice(0, 1000));
-    // GitHub Markdown CSS, KaTeX CSSを読み込む
+    // GitHub Markdown CSSを読み込む
     const githubCss = await readFile(join(process.cwd(), "public/github-markdown.css"), "utf-8");
-    const katexCss = await readFile(join(process.cwd(), "node_modules/katex/dist/katex.min.css"), "utf-8");
 
     // HTMLテンプレート
     const html = `
@@ -72,7 +68,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             font-size: 16px;
           }
         </style>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
       </head>
       <body>
         <article class="markdown-body">
@@ -93,8 +88,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     const page = await browser.newPage();
     await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
-    // KaTeX数式描画が完了するまで待つ
-    await page.waitForFunction(() => !!document.querySelector('.katex'), { timeout: 5000 }).catch(() => {});
+    // SVG数式が描画されるまで待機（SVG要素が出現するまで）
+    await page.waitForFunction(() => !!document.querySelector('svg[data-mml-node]'), { timeout: 5000 }).catch(() => {});
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,

@@ -5,7 +5,6 @@ import { mkdir } from "fs/promises";
 import { writeFile, unlink, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import puppeteer from "puppeteer";
-import type { Browser } from "puppeteer";
 
 // remark系
 import { unified } from "unified";

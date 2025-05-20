@@ -3,7 +3,6 @@
 import React, { useState, useRef } from "react";
 import MarkdownIt from "markdown-it";
 import mk from "markdown-it-katex";
-import html2pdf from "html2pdf.js";
 
 const mdParser = MarkdownIt({ html: true, linkify: true, typographer: true }).use(mk);
 
@@ -32,6 +31,7 @@ $$
       if (!title) title = "markdown";
       title = title.replace(/[\\\/:*?\"<>|]/g, "").slice(0, 50);
 
+      const html2pdf = (await import("html2pdf.js")).default;
       await html2pdf()
         .set({
           margin: 10,

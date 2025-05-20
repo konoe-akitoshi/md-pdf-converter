@@ -1,9 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
-
-import chrome from "chrome-aws-lambda";
+import { writeFile, unlink } from "fs/promises";
+import { readFile } from "fs/promises";
+import { marked } from "marked";
+import puppeteer from "puppeteer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -17,39 +18,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return;
     }
 
-    // 1行目からファイル名生成
+    // ファイル名生成
     let title = markdown.split("\n")[0].replace(/^#*\s*/, "").trim();
     if (!title) title = "markdown";
-    // ファイル名に使えない文字を除去
     title = title.replace(/[\\\/:*?"<>|]/g, "").slice(0, 50);
 
-    const tmpMd = join(tmpdir(), `md2pdf_${Date.now()}.md`);
-    const tmpPdf = join(tmpdir(), `md2pdf_${Date.now()}.pdf`);
-    await writeFile(tmpMd, markdown, "utf-8");
+    // Markdown → HTML
+    const htmlContent = marked.parse(markdown);
 
-    const { mdToPdf } = await import("md-to-pdf");
-    // process.cwd()からの絶対パスで指定
-    const stylesheet = join(process.cwd(), "node_modules/github-markdown-css/github-markdown.css");
+    // GitHub Markdown CSS を読み込む
+    const stylesheetPath = join(process.cwd(), "node_modules/github-markdown-css/github-markdown.css");
+    const githubCss = await readFile(stylesheetPath, "utf-8");
 
-    // VercelやLambdaなどのサーバーレス環境ではchrome-aws-lambdaを利用
-    const isServerless = !!process.env.AWS_LAMBDA_FUNCTION_VERSION || !!process.env.VERCEL;
-    const launchOptions = isServerless
-      ? {
-          args: chrome.args,
-          executablePath: await chrome.executablePath,
-          headless: true,
-        }
-      : undefined;
+    // HTML テンプレート
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${title}</title>
+        <style>
+          ${githubCss}
+          body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 40px;
+            background: #fff;
+          }
+          .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+          }
+        </style>
+      </head>
+      <body>
+        <article class="markdown-body">
+          ${htmlContent}
+        </article>
+      </body>
+      </html>
+    `;
 
-    await mdToPdf(
-      { path: tmpMd },
-      { dest: tmpPdf, stylesheet: [stylesheet], launch_options: launchOptions }
-    );
+    // 一時HTMLファイル作成
+    const tmpHtml = join(tmpdir(), `md2pdf_${Date.now()}.html`);
+    await writeFile(tmpHtml, html, "utf-8");
 
-    const pdfBuffer = await (await import("fs")).promises.readFile(tmpPdf);
+    // PuppeteerでPDF生成
+    const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
+    const page = await browser.newPage();
+    await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: 40, bottom: 40, left: 40, right: 40 },
+    });
+    await browser.close();
 
-    await unlink(tmpMd);
-    await unlink(tmpPdf);
+    await unlink(tmpHtml);
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);

@@ -4,7 +4,7 @@ import { join } from "path";
 import { mkdir } from "fs/promises";
 import { writeFile, unlink, readFile } from "fs/promises";
 import { existsSync } from "fs";
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 
 // remark系
 import { unified } from "unified";
@@ -167,7 +167,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         // パスが見つからなかった場合
         if (!chromeFound) {
-          console.log("No Chrome executable found, trying to launch without executablePath");
+          console.log("No Chrome executable found, using default Puppeteer");
+          // puppeteer-coreではなくpuppeteerを使用しているので、executablePathを削除しても問題ない
           delete launchOptions.executablePath;
         }
       } catch (error) {

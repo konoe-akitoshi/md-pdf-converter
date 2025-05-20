@@ -3,6 +3,8 @@ import { writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
+import chrome from "chrome-aws-lambda";
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     res.status(405).send("Method Not Allowed");
@@ -29,9 +31,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // process.cwd()からの絶対パスで指定
     const stylesheet = join(process.cwd(), "node_modules/github-markdown-css/github-markdown.css");
 
+    // VercelやLambdaなどのサーバーレス環境ではchrome-aws-lambdaを利用
+    const isServerless = !!process.env.AWS_LAMBDA_FUNCTION_VERSION || !!process.env.VERCEL;
+    const launchOptions = isServerless
+      ? {
+          args: chrome.args,
+          executablePath: await chrome.executablePath,
+          headless: true,
+        }
+      : undefined;
+
     await mdToPdf(
       { path: tmpMd },
-      { dest: tmpPdf, stylesheet: [stylesheet] }
+      { dest: tmpPdf, stylesheet: [stylesheet], launch_options: launchOptions }
     );
 
     const pdfBuffer = await (await import("fs")).promises.readFile(tmpPdf);

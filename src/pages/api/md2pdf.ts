@@ -3,6 +3,7 @@ import { tmpdir } from "os";
 import { join } from "path";
 import { writeFile, unlink, readFile } from "fs/promises";
 import puppeteer from "puppeteer";
+import type { Browser } from "puppeteer";
 
 // remark系
 import { unified } from "unified";
@@ -82,10 +83,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await writeFile(tmpHtml, html, "utf-8");
 
     // PuppeteerでPDF生成
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
+    let browser: Browser;
+    
+    // Vercel環境用の設定
+    if (process.env.VERCEL) {
+      console.log("Running on Vercel - using optimized Puppeteer settings");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+          "--hide-scrollbars",
+          "--disable-web-security"
+        ],
+      });
+    } else {
+      // ローカル環境用の設定
+      console.log("Running locally - using default Puppeteer settings");
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      });
+    }
     const page = await browser.newPage();
     await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
     // SVG数式が描画されるまで待機（SVG要素が出現するまで）
@@ -110,11 +131,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);
     res.status(200).end(pdfBuffer);
   } catch (e: unknown) {
-    console.error(e);
+    console.error("PDF生成中にエラーが発生しました:", e);
+    
+    // Puppeteerのエラーメッセージをより詳細に
+    let errorMessage = "不明なエラー";
     if (e instanceof Error) {
-      res.status(500).send("PDF生成エラー: " + e.message);
+      errorMessage = e.message;
+      console.error("エラースタック:", e.stack);
     } else {
-      res.status(500).send("PDF生成エラー: " + String(e));
+      errorMessage = String(e);
     }
+    
+    // Vercel環境の情報を追加
+    if (process.env.VERCEL) {
+      console.log("Vercel環境情報:", {
+        region: process.env.VERCEL_REGION,
+        env: process.env.VERCEL_ENV,
+        url: process.env.VERCEL_URL
+      });
+    }
+    
+    res.status(500).send("PDF生成エラー: " + errorMessage);
   }
 }

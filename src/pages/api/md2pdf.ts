@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { tmpdir } from "os";
 import { join } from "path";
 import { writeFile, unlink, readFile } from "fs/promises";
+import { existsSync } from "fs";
 import puppeteer from "puppeteer";
 import type { Browser } from "puppeteer";
 
@@ -85,28 +86,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // PuppeteerでPDF生成
     let browser: Browser;
     
+    // Puppeteerの起動オプション
+    const launchOptions: any = {
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--hide-scrollbars",
+        "--disable-web-security"
+      ],
+    };
+    
     // Vercel環境用の設定
     if (process.env.VERCEL) {
       console.log("Running on Vercel - using optimized Puppeteer settings");
-      browser = await puppeteer.launch({
-        headless: true,
-        args: [
-          "--no-sandbox",
-          "--disable-setuid-sandbox",
-          "--disable-dev-shm-usage",
-          "--disable-gpu",
-          "--hide-scrollbars",
-          "--disable-web-security"
-        ],
-      });
+      
+      // Vercel環境でのキャッシュパスを設定
+      if (process.env.PUPPETEER_CACHE_DIR) {
+        console.log(`Using custom cache directory: ${process.env.PUPPETEER_CACHE_DIR}`);
+      }
+      
+      // Vercel環境でのChrome実行パスを確認
+      try {
+        const possiblePaths = [
+          '/tmp/chromium',
+          '/tmp/chrome',
+          '/opt/chromium',
+          '/opt/chrome',
+          '/layer/chromium/bin/chromium',
+          '/layer/chrome/bin/chrome'
+        ];
+        
+        for (const path of possiblePaths) {
+          if (existsSync(path)) {
+            console.log(`Found Chrome at: ${path}`);
+            launchOptions.executablePath = path;
+            break;
+          }
+        }
+      } catch (error) {
+        console.error("Error checking Chrome paths:", error);
+      }
     } else {
       // ローカル環境用の設定
       console.log("Running locally - using default Puppeteer settings");
-      browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
     }
+    
+    // ブラウザを起動
+    browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
     // SVG数式が描画されるまで待機（SVG要素が出現するまで）

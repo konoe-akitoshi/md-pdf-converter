@@ -4,16 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx puppeteer browsers install chrome && next build",
+    "build": "mkdir -p /tmp/.cache && npx puppeteer browsers install chrome && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "mkdir -p /tmp/.cache && npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "github-markdown-css": "^5.8.1",
     "katex": "^0.16.22",
     "next": "15.3.2",
     "puppeteer": "^24.8.2",
+    "puppeteer-core": "^24.8.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",

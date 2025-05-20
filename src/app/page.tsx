@@ -3,8 +3,10 @@
 import React, { useState, useRef } from "react";
 import MarkdownIt from "markdown-it";
 import mk from "markdown-it-katex";
+import html2pdf from "html2pdf.js";
 
 const mdParser = MarkdownIt({ html: true, linkify: true, typographer: true }).use(mk);
+
 export default function Home() {
   const [markdown, setMarkdown] = useState<string>(
     `# マークダウン→PDF変換デモ
@@ -21,36 +23,25 @@ $$
 
   const handleDownloadPDF = async () => {
     try {
-      const res = await fetch("/api/md2pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown }),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        alert("PDF生成エラー: " + errText);
+      if (!previewRef.current) {
+        alert("プレビューが見つかりません");
         return;
       }
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
+      // ファイル名生成
+      let title = markdown.split("\n")[0].replace(/^#*\s*/, "").trim();
+      if (!title) title = "markdown";
+      title = title.replace(/[\\\/:*?\"<>|]/g, "").slice(0, 50);
 
-      // Content-Dispositionヘッダからファイル名を取得
-      let filename = "markdown.pdf";
-      const disposition = res.headers.get("Content-Disposition");
-      if (disposition) {
-        const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?/i);
-        if (match && match[1]) {
-          filename = decodeURIComponent(match[1]);
-        }
-      }
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      await html2pdf()
+        .set({
+          margin: 10,
+          filename: `${title}.pdf`,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        })
+        .from(previewRef.current)
+        .save();
     } catch (e: unknown) {
       if (e instanceof Error) {
         alert("PDF生成エラー: " + e.message);
@@ -81,29 +72,18 @@ $$
         <div className="flex-1 flex flex-col">
           <label className="mb-2 font-semibold">プレビュー</label>
           <div
-            className="w-full h-96 overflow-auto border rounded bg-white text-black p-4"
-            style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
-            dangerouslySetInnerHTML={{ __html: mdParser.render(markdown) }}
-          />
-          {/* PDF用: 非表示・高さ制限なし */}
-          <div
             ref={previewRef}
-            className="w-full border rounded bg-white text-black p-4 absolute left-[-9999px] top-0"
-            style={{ fontFamily: "'Noto Sans JP', sans-serif", position: "absolute", left: "-9999px", top: 0 }}
-            aria-hidden="true"
+            className="markdown-body border rounded p-4 bg-white min-h-96"
             dangerouslySetInnerHTML={{ __html: mdParser.render(markdown) }}
           />
         </div>
       </div>
       <button
-        className="mt-8 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold"
+        className="mt-8 px-6 py-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition"
         onClick={handleDownloadPDF}
       >
-        PDFとしてダウンロード
+        PDFダウンロード
       </button>
-      <div className="mt-8 text-sm text-gray-500">
-        日本語・数式（KaTeX）・画像・リンク等に対応
-      </div>
     </div>
   );
 }

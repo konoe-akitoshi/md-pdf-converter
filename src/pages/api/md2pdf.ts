@@ -100,10 +100,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await writeFile(tmpHtml, html, "utf-8");
 
     // PuppeteerでPDF生成
-    let browser: Browser;
+    console.log("Launching Puppeteer...");
     
     // Puppeteerの起動オプション
-    const launchOptions: any = {
+    const launchOptions: {
+      headless: boolean;
+      args: string[];
+      executablePath?: string;
+    } = {
       headless: true,
       args: [
         "--no-sandbox",
@@ -151,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     
     // ブラウザを起動
-    browser = await puppeteer.launch(launchOptions);
+    const browser = await puppeteer.launch(launchOptions);
     const page = await browser.newPage();
     await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
     // SVG数式が描画されるまで待機（SVG要素が出現するまで）

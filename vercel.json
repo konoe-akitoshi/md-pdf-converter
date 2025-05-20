@@ -1,6 +1,6 @@
 {
   "functions": {
-    "/api/md2pdf": {
+    "api/md2pdf": {
       "memory": 1024,
       "maxDuration": 60
     }

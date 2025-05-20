@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { tmpdir } from "os";
 import { join } from "path";
+import { mkdir } from "fs/promises";
 import { writeFile, unlink, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import puppeteer from "puppeteer";
@@ -79,8 +80,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       </html>
     `;
 
+    // 一時ディレクトリの確保（Vercel環境用）
+    let tempDir = tmpdir();
+    if (process.env.VERCEL) {
+      tempDir = "/tmp";
+      // /tmpディレクトリが存在することを確認
+      try {
+        await mkdir(tempDir, { recursive: true });
+        console.log(`Created temp directory: ${tempDir}`);
+      } catch (error) {
+        console.warn(`Failed to create temp directory: ${error}`);
+        // エラーが発生しても続行（ディレクトリが既に存在する場合など）
+      }
+    }
+    
     // 一時HTMLファイル作成
-    const tmpHtml = join(tmpdir(), `md2pdf_${Date.now()}.html`);
+    const tmpHtml = join(tempDir, `md2pdf_${Date.now()}.html`);
+    console.log(`Creating temporary HTML file at: ${tmpHtml}`);
     await writeFile(tmpHtml, html, "utf-8");
 
     // PuppeteerでPDF生成

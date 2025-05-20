@@ -2,9 +2,16 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { tmpdir } from "os";
 import { join } from "path";
 import { writeFile, unlink, readFile } from "fs/promises";
-import MarkdownIt from "markdown-it";
-import mk from "markdown-it-katex";
 import puppeteer from "puppeteer";
+
+// remark系
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
+import rehypeKatex from "rehype-katex";
+import rehypeStringify from "rehype-stringify";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -23,14 +30,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!title) title = "markdown";
     title = title.replace(/[\\\/:*?"<>|]/g, "").slice(0, 50);
 
-    // markdown-it + katexでHTML生成
-    const mdParser = MarkdownIt({ html: true, linkify: true, typographer: true }).use(mk);
-    const htmlContent = mdParser.render(markdown);
+    // remarkパイプラインでMarkdown→HTML（GFM+数式対応）
+    const file = await unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(remarkMath)
+      .use(remarkRehype)
+      .use(rehypeKatex)
+      .use(rehypeStringify)
+      .process(markdown);
 
-    // GitHub Markdown CSS, KaTeX CSS, KaTeX JSを読み込む
+    const htmlContent = String(file);
+
+    // 生成HTMLの一部をログ出力（デバッグ用）
+    console.log("=== htmlContent sample ===");
+    console.log(htmlContent.slice(0, 1000));
+    // GitHub Markdown CSS, KaTeX CSSを読み込む
     const githubCss = await readFile(join(process.cwd(), "public/github-markdown.css"), "utf-8");
     const katexCss = await readFile(join(process.cwd(), "node_modules/katex/dist/katex.min.css"), "utf-8");
-    // KaTeX JSはCDNで読み込む
 
     // HTMLテンプレート
     const html = `
@@ -56,9 +73,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             font-size: 16px;
           }
         </style>
-        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-          onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true},{left: '$', right: '$', display: false}]});"></script>
       </head>
       <body>
         <article class="markdown-body">
@@ -79,6 +93,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     const page = await browser.newPage();
     await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
+    // KaTeX数式描画が完了するまで待つ
+    await page.waitForFunction(() => !!document.querySelector('.katex'), { timeout: 5000 }).catch(() => {});
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
@@ -90,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);
-    res.status(200).send(pdfBuffer);
+    res.status(200).end(pdfBuffer);
   } catch (e: unknown) {
     console.error(e);
     if (e instanceof Error) {

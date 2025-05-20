@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import MarkdownIt from "markdown-it";
-import mk from "markdown-it-katex";
-
-const mdParser = MarkdownIt({ html: true, linkify: true, typographer: true }).use(mk);
+import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 
 export default function Home() {
   const [markdown, setMarkdown] = useState<string>(
@@ -18,30 +19,39 @@ $$
 $$
 `
   );
-  const previewRef = useRef<HTMLDivElement>(null);
 
   const handleDownloadPDF = async () => {
     try {
-      if (!previewRef.current) {
-        alert("プレビューが見つかりません");
+      const res = await fetch("/api/md2pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        alert("PDF生成エラー: " + errText);
         return;
       }
-      // ファイル名生成
-      let title = markdown.split("\n")[0].replace(/^#*\s*/, "").trim();
-      if (!title) title = "markdown";
-      title = title.replace(/[\\\/:*?\"<>|]/g, "").slice(0, 50);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
 
-      const html2pdf = (await import("html2pdf.js")).default;
-      await html2pdf()
-        .set({
-          margin: 10,
-          filename: `${title}.pdf`,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        })
-        .from(previewRef.current)
-        .save();
+      // Content-Dispositionヘッダからファイル名を取得
+      let filename = "markdown.pdf";
+      const disposition = res.headers.get("Content-Disposition");
+      if (disposition) {
+        const match = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?/i);
+        if (match && match[1]) {
+          filename = decodeURIComponent(match[1]);
+        }
+      }
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
     } catch (e: unknown) {
       if (e instanceof Error) {
         alert("PDF生成エラー: " + e.message);
@@ -71,11 +81,14 @@ $$
         {/* プレビュー */}
         <div className="flex-1 flex flex-col">
           <label className="mb-2 font-semibold">プレビュー</label>
-          <div
-            ref={previewRef}
-            className="markdown-body border rounded p-4 bg-white min-h-96"
-            dangerouslySetInnerHTML={{ __html: mdParser.render(markdown) }}
-          />
+          <div className="markdown-body border rounded p-4 bg-white min-h-96">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {markdown}
+            </ReactMarkdown>
+          </div>
         </div>
       </div>
       <button

@@ -26,8 +26,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Markdown → HTML
     const htmlContent = marked.parse(markdown);
 
-    // GitHub Markdown CSS を読み込む
-    const stylesheetPath = join(process.cwd(), "node_modules/github-markdown-css/github-markdown.css");
+    // GitHub Markdown CSS を読み込む（public配下を参照）
+    const stylesheetPath = join(process.cwd(), "public/github-markdown.css");
     const githubCss = await readFile(stylesheetPath, "utf-8");
 
     // HTML テンプレート

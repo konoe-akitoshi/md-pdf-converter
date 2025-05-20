@@ -98,7 +98,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: 20, bottom: 20, left: 20, right: 20 },
+      margin: { top: 20, bottom: 40, left: 20, right: 20 },
+      displayHeaderFooter: true,
+      footerTemplate: `
+        <div style="width:100%;font-size:10px;color:#888;text-align:center;padding:4px 0;font-family:'Noto Sans JP','Yu Gothic','Meiryo',sans-serif;">
+          <span class="pageNumber"></span>
+        </div>
+      `,
+      headerTemplate: "<div></div>"
     });
     await browser.close();
 

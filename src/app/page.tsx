@@ -20,8 +20,10 @@ $$
 $$
 `
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDownloadPDF = async () => {
+    setIsLoading(true);
     try {
       const res = await fetch("/api/md2pdf", {
         method: "POST",
@@ -31,6 +33,7 @@ $$
       if (!res.ok) {
         const errText = await res.text();
         alert("PDF生成エラー: " + errText);
+        setIsLoading(false);
         return;
       }
       const blob = await res.blob();
@@ -59,6 +62,8 @@ $$
       } else {
         alert("PDF生成エラー: " + String(e));
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,10 +98,36 @@ $$
         </div>
       </div>
       <button
-        className="mt-8 px-6 py-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition"
+        className={`mt-8 px-6 py-3 rounded font-bold transition ${
+          isLoading
+            ? "bg-gray-400 text-white cursor-not-allowed"
+            : "bg-blue-600 text-white hover:bg-blue-700"
+        }`}
         onClick={handleDownloadPDF}
+        disabled={isLoading}
       >
-        PDFダウンロード
+        {isLoading ? (
+          <span>
+            <svg
+              className="inline mr-2 w-5 h-5 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+              <path d="M12 2v4" />
+              <path d="M12 22v-4" />
+              <path d="M2 12h4" />
+              <path d="M22 12h-4" />
+            </svg>
+            生成中...
+          </span>
+        ) : (
+          "PDFダウンロード"
+        )}
       </button>
     </div>
   );

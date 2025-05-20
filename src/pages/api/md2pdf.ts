@@ -58,7 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <title>${title}</title>
         <style>
           ${githubCss}
-          ${katexCss}
           body {
             box-sizing: border-box;
             margin: 0;
@@ -73,6 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             font-size: 16px;
           }
         </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
       </head>
       <body>
         <article class="markdown-body">

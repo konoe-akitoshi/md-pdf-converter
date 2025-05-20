@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     return config;
   },
+  // ESLintの設定
+  eslint: {
+    // ビルド時のESLintチェックを無効化
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;

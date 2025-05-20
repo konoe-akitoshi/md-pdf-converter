@@ -2,8 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { tmpdir } from "os";
 import { join } from "path";
 import { writeFile, unlink, readFile } from "fs/promises";
-import { marked } from "marked";
-import puppeteer from "puppeteer";
+import { convert } from "mdpdf";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -22,63 +21,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!title) title = "markdown";
     title = title.replace(/[\\\/:*?"<>|]/g, "").slice(0, 50);
 
-    // Markdown → HTML
-    const htmlContent = marked.parse(markdown);
+    // 一時ファイルパス
+    const tmpMd = join(tmpdir(), `md2pdf_${Date.now()}.md`);
+    const tmpPdf = join(tmpdir(), `md2pdf_${Date.now()}.pdf`);
+    const stylePath = join(process.cwd(), "public/github-markdown.css");
 
-    // GitHub Markdown CSS を読み込む
-    const stylesheetPath = join(process.cwd(), "public/github-markdown.css");
-    const githubCss = await readFile(stylesheetPath, "utf-8");
+    // Markdownを一時ファイルに保存
+    await writeFile(tmpMd, markdown, "utf-8");
 
-    // HTML テンプレート
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>${title}</title>
-        <style>
-          ${githubCss}
-          body {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 40px;
-            background: #fff;
-          }
-          .markdown-body {
-            box-sizing: border-box;
-            min-width: 200px;
-            max-width: 980px;
-            margin: 0 auto;
-          }
-        </style>
-      </head>
-      <body>
-        <article class="markdown-body">
-          ${htmlContent}
-        </article>
-      </body>
-      </html>
-    `;
-
-    // 一時HTMLファイル作成
-    const tmpHtml = join(tmpdir(), `md2pdf_${Date.now()}.html`);
-    await writeFile(tmpHtml, html, "utf-8");
-
-    // PuppeteerでPDF生成
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    // mdpdfでPDF生成
+    await convert({
+      source: tmpMd,
+      destination: tmpPdf,
+      styles: stylePath,
+      pdf: {
+        format: "A4",
+        orientation: "portrait",
+        printBackground: true,
+        margin: { top: "40mm", bottom: "40mm", left: "40mm", right: "40mm" },
+      },
     });
-    const page = await browser.newPage();
-    await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: 40, bottom: 40, left: 40, right: 40 },
-    });
-    await browser.close();
 
-    await unlink(tmpHtml);
+    // PDFバッファを読み込み
+    const pdfBuffer = await readFile(tmpPdf);
+
+    // 一時ファイル削除
+    await unlink(tmpMd);
+    await unlink(tmpPdf);
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);

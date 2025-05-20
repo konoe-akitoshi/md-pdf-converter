@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "mkdir -p /tmp/.cache && npx puppeteer browsers install chrome"
+    "postinstall": "mkdir -p /tmp/.cache && npx puppeteer browsers install chrome && chmod -R 777 /tmp/.cache"
   },
   "dependencies": {
     "github-markdown-css": "^5.8.1",

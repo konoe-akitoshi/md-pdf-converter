@@ -5,10 +5,5 @@
       "maxDuration": 60
     }
   },
-  "build": {
-    "env": {
-      "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "false",
-      "PUPPETEER_CACHE_DIR": "/tmp/.cache/puppeteer"
-    }
-  }
+  "buildCommand": "npm run postinstall && npm run build"
 }

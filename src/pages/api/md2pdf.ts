@@ -116,64 +116,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         "--disable-gpu",
         "--hide-scrollbars",
         "--disable-web-security"
-      ],
-      executablePath: process.env.VERCEL
-        ? "/tmp/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome"
-        : process.env.PUPPETEER_EXECUTABLE_PATH || ""
+      ]
     };
     
     // Vercel環境用の設定
     if (process.env.VERCEL) {
       console.log("Running on Vercel - using optimized Puppeteer settings");
-      console.log(`Chrome executable path: ${launchOptions.executablePath}`);
       
       // Vercel環境でのキャッシュパスを設定
       const cachePath = "/tmp/.cache/puppeteer";
       console.log(`Setting cache directory to: ${cachePath}`);
-      process.env.PUPPETEER_CACHE_DIR = cachePath;
       
-      // キャッシュディレクトリが存在するか確認
-      try {
-        if (existsSync(cachePath)) {
-          console.log(`Cache directory exists: ${cachePath}`);
-        } else {
-          console.log(`Cache directory does not exist: ${cachePath}`);
-        }
-        
-        // Chrome実行ファイルが存在するか確認
-        if (launchOptions.executablePath && existsSync(launchOptions.executablePath)) {
-          console.log(`Chrome executable exists: ${launchOptions.executablePath}`);
-        } else {
-          console.log(`Chrome executable does not exist or not specified: ${launchOptions.executablePath || 'undefined'}`);
-          
-          // 他の可能性のあるパスを確認
-          const possiblePaths = [
-            '/tmp/chrome',
-            '/tmp/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
-            '/vercel/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
-            '/opt/chrome/chrome',
-            '/opt/chromium/chrome'
-          ];
-          
-          for (const chromePath of possiblePaths) {
-            if (existsSync(chromePath)) {
-              console.log(`Found Chrome at: ${chromePath}`);
-              launchOptions.executablePath = chromePath;
-              break;
-            }
+      // 可能性のあるChromeのパスを確認
+      const possiblePaths = [
+        '/tmp/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
+        '/vercel/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
+        '/opt/chrome/chrome',
+        '/opt/chromium/chrome'
+      ];
+      
+      // 存在するパスを探す
+      for (const chromePath of possiblePaths) {
+        try {
+          if (existsSync(chromePath)) {
+            console.log(`Found Chrome at: ${chromePath}`);
+            launchOptions.executablePath = chromePath;
+            break;
           }
+        } catch (error) {
+          console.error(`Error checking path ${chromePath}:`, error);
         }
-      } catch (error) {
-        console.error("Error checking paths:", error);
+      }
+      
+      // パスが見つからなかった場合はデフォルトのパスを使用
+      if (!launchOptions.executablePath) {
+        console.log("No Chrome executable found, using default path");
+        launchOptions.executablePath = '/tmp/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome';
       }
     } else {
       // ローカル環境用の設定
       console.log("Running locally - using default Puppeteer settings");
-      
-      // ローカル環境ではPuppeteerが自動的にChromeを見つけるようにする
-      if (!launchOptions.executablePath) {
-        console.log("No Chrome executable path specified for local environment");
-      }
+      // ローカル環境ではexecutablePathを指定しない（自動検出）
+      delete launchOptions.executablePath;
     }
     
     // ブラウザを起動

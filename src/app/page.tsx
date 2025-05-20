@@ -3,8 +3,6 @@
 import React, { useState, useRef } from "react";
 import MarkdownIt from "markdown-it";
 import mk from "markdown-it-katex";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 const mdParser = MarkdownIt({ html: true, linkify: true, typographer: true }).use(mk);
 export default function Home() {
@@ -53,8 +51,12 @@ $$
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (e: any) {
-      alert("PDF生成エラー: " + e?.message);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        alert("PDF生成エラー: " + e.message);
+      } else {
+        alert("PDF生成エラー: " + String(e));
+      }
     }
   };
 

@@ -42,8 +42,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);
     res.status(200).send(pdfBuffer);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error(e);
-    res.status(500).send("PDF生成エラー: " + e?.message);
+    if (e instanceof Error) {
+      res.status(500).send("PDF生成エラー: " + e.message);
+    } else {
+      res.status(500).send("PDF生成エラー: " + String(e));
+    }
   }
 }

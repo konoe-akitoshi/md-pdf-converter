@@ -22,6 +22,10 @@ const githubMarkdownCss = `
   --base-text-weight-semibold: 600;
   --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
   --fgColor-accent: Highlight;
+  max-width: 794px; /* A4横幅 */
+  margin: 40px auto;
+  min-width: 200px;
+  box-sizing: border-box;
 }
 /* ...（public/github-markdown.cssの全内容をここに貼り付けてください。省略しています）... */
 `;
@@ -29,9 +33,14 @@ const githubMarkdownCss = `
 // KaTeX CSS（node_modules/katex/dist/katex.min.css）をインライン化
 const katexCss = `@font-face{font-family:KaTeX_AMS;font-style:normal;font-weight:400;src:url(fonts/KaTeX_AMS-Regular.woff2) format("woff2"),url(fonts/KaTeX_AMS-Regular.woff) format("woff"),url(fonts/KaTeX_AMS-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Caligraphic;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Caligraphic-Bold.woff2) format("woff2"),url(fonts/KaTeX_Caligraphic-Bold.woff) format("woff"),url(fonts/KaTeX_Caligraphic-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Caligraphic;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Caligraphic-Regular.woff2) format("woff2"),url(fonts/KaTeX_Caligraphic-Regular.woff) format("woff"),url(fonts/KaTeX_Caligraphic-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Fraktur;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Fraktur-Bold.woff2) format("woff2"),url(fonts/KaTeX_Fraktur-Bold.woff) format("woff"),url(fonts/KaTeX_Fraktur-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Fraktur;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Fraktur-Regular.woff2) format("woff2"),url(fonts/KaTeX_Fraktur-Regular.woff) format("woff"),url(fonts/KaTeX_Fraktur-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:normal;font-weight:700;src:url(fonts/KaTeX_Main-Bold.woff2) format("woff2"),url(fonts/KaTeX_Main-Bold.woff) format("woff"),url(fonts/KaTeX_Main-Bold.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:italic;font-weight:700;src:url(fonts/KaTeX_Main-BoldItalic.woff2) format("woff2"),url(fonts/KaTeX_Main-BoldItalic.woff) format("woff"),url(fonts/KaTeX_Main-BoldItalic.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:italic;font-weight:400;src:url(fonts/KaTeX_Main-Italic.woff2) format("woff2"),url(fonts/KaTeX_Main-Italic.woff) format("woff"),url(fonts/KaTeX_Main-Italic.ttf) format("truetype")}@font-face{font-family:KaTeX_Main;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Main-Regular.woff2) format("woff2"),url(fonts/KaTeX_Main-Regular.woff) format("woff"),url(fonts/KaTeX_Main-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Math;font-style:italic;font-weight:700;src:url(fonts/KaTeX_Math-BoldItalic.woff2) format("woff2"),url(fonts/KaTeX_Math-BoldItalic.woff) format("woff"),url(fonts/KaTeX_Math-BoldItalic.ttf) format("truetype")}@font-face{font-family:KaTeX_Math;font-style:italic;font-weight:400;src:url(fonts/KaTeX_Math-Italic.woff2) format("woff2"),url(fonts/KaTeX_Math-Italic.woff) format("woff"),url(fonts/KaTeX_Math-Italic.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:normal;font-weight:700;src:url(fonts/KaTeX_SansSerif-Bold.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Bold.woff) format("woff"),url(fonts/KaTeX_SansSerif-Bold.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:italic;font-weight:400;src:url(fonts/KaTeX_SansSerif-Italic.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Italic.woff) format("woff"),url(fonts/KaTeX_SansSerif-Italic.ttf) format("truetype")}@font-face{font-family:"KaTeX_SansSerif";font-style:normal;font-weight:400;src:url(fonts/KaTeX_SansSerif-Regular.woff2) format("woff2"),url(fonts/KaTeX_SansSerif-Regular.woff) format("woff"),url(fonts/KaTeX_SansSerif-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Script;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Script-Regular.woff2) format("woff2"),url(fonts/KaTeX_Script-Regular.woff) format("woff"),url(fonts/KaTeX_Script-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size1;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size1-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size1-Regular.woff) format("woff"),url(fonts/KaTeX_Size1-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size2;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size2-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size2-Regular.woff) format("woff"),url(fonts/KaTeX_Size2-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size3;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size3-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size3-Regular.woff) format("woff"),url(fonts/KaTeX_Size3-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Size4;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Size4-Regular.woff2) format("woff2"),url(fonts/KaTeX_Size4-Regular.woff) format("woff"),url(fonts/KaTeX_Size4-Regular.ttf) format("truetype")}@font-face{font-family:KaTeX_Typewriter;font-style:normal;font-weight:400;src:url(fonts/KaTeX_Typewriter-Regular.woff2) format("woff2"),url(fonts/KaTeX_Typewriter-Regular.woff) format("woff"),url(fonts/KaTeX_Typewriter-Regular.ttf) format("truetype")}.katex{font:normal 1.21em KaTeX_Main,Times New Roman,serif;line-height:1.2;text-indent:0;text-rendering:auto}.katex *{-ms-high-contrast-adjust:none!important;border-color:currentColor}.katex .katex-version:after{content:"0.16.22"}...（省略）`;
 
-export default function Home() {
-  const [markdown, setMarkdown] = useState<string>(
-    `# マークダウン→PDF変換デモ
+function extractTitle(markdown: string): string {
+  // 1行目の#を除去しtrim、なければ"Markdownプレビュー"
+  const firstLine = markdown.split("\n").find(line => line.trim() !== "") || "";
+  const title = firstLine.replace(/^#+\s*/, "").trim();
+  return title || "Markdownプレビュー";
+}
+
+const SAMPLE_PLACEHOLDER = `# マークダウン→PDF変換デモ
 
 日本語・**太字**・*イタリック*・[リンク](https://example.com)  
 数式もOK: $E=mc^2$
@@ -39,8 +48,11 @@ export default function Home() {
 $$
 \\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
 $$
-`
-  );
+`;
+
+export default function Home() {
+  const [markdown, setMarkdown] = useState<string>(""); // 初期値は空
+
   const [html, setHtml] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -67,12 +79,13 @@ $$
   const handleOpenHtml = () => {
     setIsLoading(true);
     try {
+      const title = extractTitle(markdown);
       const htmlDoc = `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
-          <title>Markdownプレビュー</title>
+          <title>${title}</title>
           <style>${githubMarkdownCss}</style>
           <style>${katexCss}</style>
           <style>
@@ -85,14 +98,15 @@ $$
             .markdown-body {
               box-sizing: border-box;
               min-width: 200px;
-              max-width: 980px;
-              margin: 0 auto;
+              max-width: 794px;
+              margin: 40px auto;
               font-size: 16px;
             }
           </style>
         </head>
         <body>
           <article class="markdown-body">
+            <h1 style="font-size:2em;font-weight:bold;margin-bottom:1em;">${title}</h1>
             ${html}
           </article>
         </body>
@@ -111,9 +125,11 @@ $$
     }
   };
 
+  const pageTitle = extractTitle(markdown);
+
   return (
     <div className="min-h-screen bg-white text-black flex flex-col items-center py-8">
-      <h1 className="text-2xl font-bold mb-6">Markdown→PDF変換サイト</h1>
+      <h1 className="text-2xl font-bold mb-6">{pageTitle}</h1>
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-5xl">
         {/* 入力エリア */}
         <div className="flex-1 flex flex-col">
@@ -125,7 +141,7 @@ $$
             className="w-full h-96 p-3 border rounded resize-y font-mono text-base"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="ここにMarkdownを入力してください"
+            placeholder={SAMPLE_PLACEHOLDER}
           />
         </div>
         {/* プレビュー */}

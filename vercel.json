@@ -1,10 +1,4 @@
 {
-  "functions": {
-    "src/pages/api/md2pdf.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  },
-  "buildCommand": "npm run postinstall && npm run build",
-  "installCommand": "npm install && npm run postinstall"
+  "buildCommand": "npm run build",
+  "installCommand": "npm install"
 }

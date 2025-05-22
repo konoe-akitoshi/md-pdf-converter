@@ -1,7 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { marked } from "marked";
+import React, { useState, useEffect } from "react";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
+import rehypeMathjax from "rehype-mathjax";
+import rehypeStringify from "rehype-stringify";
 
 // github-markdown-css（public/github-markdown.css）をインライン化
 const githubMarkdownCss = `
@@ -35,36 +41,70 @@ $$
 $$
 `
   );
+  const [html, setHtml] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleOpenHtml = async () => {
+  // Markdown→HTML変換（remark/rehypeパイプライン）
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const file = await unified()
+        .use(remarkParse)
+        .use(remarkGfm)
+        .use(remarkMath)
+        .use(remarkRehype)
+        .use(rehypeMathjax)
+        .use(rehypeStringify)
+        .process(markdown);
+      if (!cancelled) setHtml(String(file));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [markdown]);
+
+  // 新しいウィンドウでHTML表示
+  const handleOpenHtml = () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/md2pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markdown }),
-      });
-      if (!res.ok) {
-        const errText = await res.text();
-        alert("HTML生成エラー: " + errText);
-        setIsLoading(false);
-        return;
-      }
-      const html = await res.text();
-      const blob = new Blob([html], { type: "text/html" });
-      const url = window.URL.createObjectURL(blob);
-
-      window.open(url, "_blank", "noopener,noreferrer");
-      // タブが開かない場合のフォールバック
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-      }, 10000);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        alert("HTML生成エラー: " + e.message);
+      const htmlDoc = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Markdownプレビュー</title>
+          <style>${githubMarkdownCss}</style>
+          <style>${katexCss}</style>
+          <style>
+            body {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 40px;
+              background: #fff;
+            }
+            .markdown-body {
+              box-sizing: border-box;
+              min-width: 200px;
+              max-width: 980px;
+              margin: 0 auto;
+              font-size: 16px;
+            }
+          </style>
+        </head>
+        <body>
+          <article class="markdown-body">
+            ${html}
+          </article>
+        </body>
+        </html>
+      `;
+      const win = window.open();
+      if (win) {
+        win.document.open();
+        win.document.write(htmlDoc);
+        win.document.close();
       } else {
-        alert("HTML生成エラー: " + String(e));
+        alert("新しいタブを開けませんでした。ポップアップブロックを解除してください。");
       }
     } finally {
       setIsLoading(false);
@@ -93,7 +133,7 @@ $$
           <label className="mb-2 font-semibold">プレビュー</label>
           <div className="markdown-body border rounded p-4 bg-white min-h-96">
             <div
-              dangerouslySetInnerHTML={{ __html: marked.parse(markdown) }}
+              dangerouslySetInnerHTML={{ __html: html }}
             />
           </div>
         </div>

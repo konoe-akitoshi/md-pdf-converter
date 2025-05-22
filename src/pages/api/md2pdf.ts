@@ -79,139 +79,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       </html>
     `;
 
-    // 一時ディレクトリの確保（Vercel環境用）
-    let tempDir = tmpdir();
-    if (process.env.VERCEL) {
-      tempDir = "/tmp";
-      // /tmpディレクトリが存在することを確認
-      try {
-        await mkdir(tempDir, { recursive: true });
-        console.log(`Created temp directory: ${tempDir}`);
-      } catch (error) {
-        console.warn(`Failed to create temp directory: ${error}`);
-        // エラーが発生しても続行（ディレクトリが既に存在する場合など）
-      }
-    }
-    
-    // 一時HTMLファイル作成
-    const tmpHtml = join(tempDir, `md2pdf_${Date.now()}.html`);
-    console.log(`Creating temporary HTML file at: ${tmpHtml}`);
-    await writeFile(tmpHtml, html, "utf-8");
-
-    // PuppeteerでPDF生成
-    console.log("Launching Puppeteer...");
-    
-    // Puppeteerの起動オプション
-    const launchOptions: {
-      headless: boolean;
-      args: string[];
-      executablePath?: string;
-    } = {
-      headless: true,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--hide-scrollbars",
-        "--disable-web-security"
-      ]
-    };
-    
-    // Vercel環境用の設定
-    if (process.env.VERCEL) {
-      console.log("Running on Vercel - using optimized Puppeteer settings");
-      
-      try {
-        // 環境変数を出力（デバッグ用）
-        console.log("Environment variables:");
-        console.log(`VERCEL: ${process.env.VERCEL}`);
-        console.log(`VERCEL_ENV: ${process.env.VERCEL_ENV}`);
-        console.log(`VERCEL_REGION: ${process.env.VERCEL_REGION}`);
-        console.log(`PUPPETEER_CACHE_DIR: ${process.env.PUPPETEER_CACHE_DIR}`);
-        console.log(`PUPPETEER_EXECUTABLE_PATH: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
-        
-        // 可能性のあるChromeのパスを確認（より多くのパスを追加）
-        const possiblePaths = [
-          // Vercelのキャッシュディレクトリ
-          '/vercel/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
-          // 一時ディレクトリ
-          '/tmp/.cache/puppeteer/chrome/linux-136.0.7103.92/chrome-linux64/chrome',
-          '/tmp/chrome/chrome',
-          // システムディレクトリ
-          '/usr/bin/google-chrome',
-          '/usr/bin/chromium',
-          '/usr/bin/chromium-browser',
-          // その他の可能性のあるパス
-          '/opt/chrome/chrome',
-          '/opt/chromium/chrome'
-        ];
-        
-        // 存在するパスを探す
-        let chromeFound = false;
-        for (const chromePath of possiblePaths) {
-          try {
-            console.log(`Checking Chrome path: ${chromePath}`);
-            if (existsSync(chromePath)) {
-              console.log(`Found Chrome at: ${chromePath}`);
-              launchOptions.executablePath = chromePath;
-              chromeFound = true;
-              break;
-            } else {
-              console.log(`Chrome not found at: ${chromePath}`);
-            }
-          } catch (error) {
-            console.error(`Error checking path ${chromePath}:`, error);
-          }
-        }
-        
-        // パスが見つからなかった場合
-        if (!chromeFound) {
-          console.log("No Chrome executable found, using default Puppeteer");
-          // puppeteer-coreではなくpuppeteerを使用しているので、executablePathを削除しても問題ない
-          delete launchOptions.executablePath;
-        }
-      } catch (error) {
-        console.error("Error during Chrome path detection:", error);
-        // エラーが発生した場合はexecutablePathを指定しない
-        delete launchOptions.executablePath;
-      }
-    } else {
-      // ローカル環境用の設定
-      console.log("Running locally - using default Puppeteer settings");
-      // ローカル環境ではexecutablePathを指定しない（自動検出）
-      delete launchOptions.executablePath;
-    }
-    
-    // ブラウザを起動
-    const browser = await puppeteer.launch(launchOptions);
-    const page = await browser.newPage();
-    await page.goto("file://" + tmpHtml, { waitUntil: "networkidle0" });
-    // SVG数式が描画されるまで待機（SVG要素が出現するまで）
-    await page.waitForFunction(() => !!document.querySelector('svg[data-mml-node]'), { timeout: 5000 }).catch(() => {});
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: 20, bottom: 40, left: 20, right: 20 },
-      displayHeaderFooter: true,
-      footerTemplate: `
-        <div style="width:100%;font-size:10px;color:#888;text-align:center;padding:4px 0;font-family:'Noto Sans JP','Yu Gothic','Meiryo',sans-serif;">
-          <span class="pageNumber"></span>
-        </div>
-      `,
-      headerTemplate: "<div></div>"
-    });
-    await browser.close();
-
-    await unlink(tmpHtml);
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(title)}.pdf"`);
-    res.status(200).end(pdfBuffer);
+    // HTMLを直接返す
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(title)}.html"`);
+    res.status(200).send(html);
   } catch (e: unknown) {
-    console.error("PDF生成中にエラーが発生しました:", e);
+    console.error("HTML生成中にエラーが発生しました:", e);
     
-    // Puppeteerのエラーメッセージをより詳細に
+    // エラーメッセージをより詳細に
     let errorMessage = "不明なエラー";
     if (e instanceof Error) {
       errorMessage = e.message;
@@ -229,6 +104,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
     
-    res.status(500).send("PDF生成エラー: " + errorMessage);
+    res.status(500).send("HTML生成エラー: " + errorMessage);
   }
 }

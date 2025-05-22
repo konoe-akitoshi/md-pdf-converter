@@ -37,6 +37,7 @@ $$
 `
   );
 
+<<<<<<< HEAD
   const handleOpenHtmlTab = () => {
     // Markdown→HTML変換
     const htmlContent = marked.parse(markdown);
@@ -82,6 +83,39 @@ $$
       win.document.close();
     } else {
       alert("新しいタブを開けませんでした。ポップアップブロックを解除してください。");
+=======
+  const handleOpenHtml = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/md2pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ markdown }),
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        alert("HTML生成エラー: " + errText);
+        setIsLoading(false);
+        return;
+      }
+      const html = await res.text();
+      const blob = new Blob([html], { type: "text/html" });
+      const url = window.URL.createObjectURL(blob);
+
+      window.open(url, "_blank", "noopener,noreferrer");
+      // タブが開かない場合のフォールバック
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 10000);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        alert("HTML生成エラー: " + e.message);
+      } else {
+        alert("HTML生成エラー: " + String(e));
+      }
+    } finally {
+      setIsLoading(false);
+>>>>>>> 68ac191 (PDF生成機能をHTML表示機能に変更し、エラーメッセージを更新)
     }
   };
 
@@ -113,10 +147,36 @@ $$
         </div>
       </div>
       <button
-        className="mt-8 px-6 py-3 rounded font-bold transition bg-blue-600 text-white hover:bg-blue-700"
-        onClick={handleOpenHtmlTab}
+        className={`mt-8 px-6 py-3 rounded font-bold transition ${
+          isLoading
+            ? "bg-gray-400 text-white cursor-not-allowed"
+            : "bg-blue-600 text-white hover:bg-blue-700"
+        }`}
+        onClick={handleOpenHtml}
+        disabled={isLoading}
       >
-        HTML新規タブで表示
+        {isLoading ? (
+          <span>
+            <svg
+              className="inline mr-2 w-5 h-5 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" />
+              <path d="M12 2v4" />
+              <path d="M12 22v-4" />
+              <path d="M2 12h4" />
+              <path d="M22 12h-4" />
+            </svg>
+            生成中...
+          </span>
+        ) : (
+          "HTML新規タブで表示"
+        )}
       </button>
     </div>
   );

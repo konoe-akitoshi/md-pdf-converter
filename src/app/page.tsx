@@ -106,7 +106,6 @@ export default function Home() {
         </head>
         <body>
           <article class="markdown-body">
-            <h1 style="font-size:2em;font-weight:bold;margin-bottom:1em;">${title}</h1>
             ${html}
           </article>
         </body>

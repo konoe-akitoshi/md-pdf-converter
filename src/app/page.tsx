@@ -124,11 +124,9 @@ export default function Home() {
     }
   };
 
-  const pageTitle = extractTitle(markdown);
-
   return (
     <div className="min-h-screen bg-white text-black flex flex-col items-center py-8">
-      <h1 className="text-2xl font-bold mb-6">{pageTitle}</h1>
+      <h1 className="text-2xl font-bold mb-6">Markdown PDF変換</h1>
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-5xl">
         {/* 入力エリア */}
         <div className="flex-1 flex flex-col">

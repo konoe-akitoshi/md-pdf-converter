@@ -161,12 +161,12 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-white border-b-2 border-blue-500 px-6 py-4 shadow-sm">
+      <header className="bg-white border-b-2 border-blue-500 px-4 lg:px-6 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Markdown PDF変換</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">Markdown PDF変換</h1>
           
           {/* オプション */}
-          <div className="flex flex-wrap gap-6 text-base">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 lg:gap-6 text-sm lg:text-base">
             <label className="flex items-center gap-2 text-gray-700 font-medium">
               <input
                 type="checkbox"
@@ -199,22 +199,22 @@ export default function Home() {
       </header>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 flex">
+      <div className="flex-1 flex flex-col lg:flex-row">
         {/* 左側: 入力エリア */}
-        <div className="w-1/2 flex flex-col bg-white border-r-2 border-gray-300">
-          <div className="bg-blue-50 border-b-2 border-blue-200 px-4 py-3 flex items-center justify-between">
-            <span className="font-bold text-gray-900 text-lg">Markdown入力</span>
-            <div className="flex gap-3">
+        <div className="w-full lg:w-1/2 flex flex-col bg-white lg:border-r-2 border-gray-300">
+          <div className="bg-blue-50 border-b-2 border-blue-200 px-3 lg:px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span className="font-bold text-gray-900 text-base lg:text-lg">Markdown入力</span>
+            <div className="flex gap-2 lg:gap-3 w-full sm:w-auto">
               <button
                 onClick={handleClear}
-                className="px-4 py-2 text-base font-medium text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 rounded-lg transition-colors shadow-sm"
+                className="px-3 lg:px-4 py-2 text-sm lg:text-base font-medium text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 rounded-lg transition-colors shadow-sm flex-1 sm:flex-none"
               >
                 クリア
               </button>
               <button
                 onClick={handleOpenHtml}
                 disabled={isLoading}
-                className={`px-4 py-2 text-base font-medium rounded-lg transition-colors shadow-sm ${
+                className={`px-3 lg:px-4 py-2 text-sm lg:text-base font-medium rounded-lg transition-colors shadow-sm flex-1 sm:flex-none ${
                   isLoading
                     ? "bg-gray-400 text-white cursor-not-allowed"
                     : "bg-blue-600 text-white hover:bg-blue-700"
@@ -225,7 +225,7 @@ export default function Home() {
             </div>
           </div>
           <textarea
-            className="flex-1 p-4 font-mono text-base text-gray-900 resize-none border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset leading-relaxed"
+            className="flex-1 p-4 font-mono text-base text-gray-900 resize-none border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset leading-relaxed min-h-96 lg:min-h-0"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder="Markdownを入力してください..."
@@ -233,10 +233,10 @@ export default function Home() {
         </div>
 
         {/* 右側: 結果表示エリア */}
-        <div className="w-1/2 flex flex-col bg-white">
+        <div className="w-full lg:w-1/2 flex flex-col bg-white border-t-2 lg:border-t-0 border-gray-300">
           {/* タブ */}
-          <div className="bg-blue-50 border-b-2 border-blue-200 px-4 py-3">
-            <div className="flex gap-2">
+          <div className="bg-blue-50 border-b-2 border-blue-200 px-3 lg:px-4 py-3">
+            <div className="flex gap-1 lg:gap-2 overflow-x-auto">
               {[
                 { key: 'html' as ViewMode, label: 'プレビュー' },
                 { key: 'source' as ViewMode, label: 'HTMLソース' },
@@ -245,7 +245,7 @@ export default function Home() {
                 <button
                   key={key}
                   onClick={() => setViewMode(key)}
-                  className={`px-4 py-2 text-base font-medium rounded-lg transition-colors ${
+                  className={`px-3 lg:px-4 py-2 text-sm lg:text-base font-medium rounded-lg transition-colors whitespace-nowrap ${
                     viewMode === key
                       ? "bg-blue-600 text-white shadow-md"
                       : "text-gray-700 hover:text-gray-900 hover:bg-white border-2 border-gray-300"
@@ -258,7 +258,7 @@ export default function Home() {
           </div>
 
           {/* 結果表示 */}
-          <div className="flex-1 overflow-auto bg-white">
+          <div className="flex-1 overflow-auto bg-white min-h-96 lg:min-h-0">
             {viewMode === 'html' && (
               <MarkdownPreview html={html} />
             )}

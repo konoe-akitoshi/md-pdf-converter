@@ -293,7 +293,7 @@ export default function Home() {
       <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-5 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Markdown PDF
+            Markdown Print
           </h1>
 
           {/* オプション */}

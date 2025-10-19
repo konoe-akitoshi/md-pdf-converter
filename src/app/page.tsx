@@ -288,73 +288,54 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       {/* ヘッダー */}
-      <header className="bg-white border-b-2 border-blue-500 px-4 lg:px-6 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">Markdown PDF変換</h1>
-          
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-5 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            Markdown PDF
+          </h1>
+
           {/* オプション */}
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 lg:gap-6 text-sm lg:text-base">
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={options.gfm}
                 onChange={() => handleOptionChange('gfm')}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
               />
-              <span>GitHub Flavored Markdown</span>
+              <span>GFM</span>
             </label>
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
+            <label className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 cursor-pointer transition-colors">
               <input
                 type="checkbox"
                 checked={options.math}
                 onChange={() => handleOptionChange('math')}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0"
               />
-              <span>数式 (KaTeX)</span>
-            </label>
-            <label className="flex items-center gap-2 text-gray-700 font-medium">
-              <input
-                type="checkbox"
-                checked={options.breaks}
-                onChange={() => handleOptionChange('breaks')}
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-              />
-              <span>改行を&lt;br&gt;に変換</span>
+              <span>数式</span>
             </label>
           </div>
         </div>
       </header>
 
       {/* メインコンテンツ */}
-      <div className="flex-1 flex flex-col lg:flex-row">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
         {/* 左側: 入力エリア */}
-        <div className="w-full lg:w-1/2 flex flex-col bg-white lg:border-r-2 border-gray-300">
-          <div className="bg-blue-50 border-b-2 border-blue-200 px-3 lg:px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <span className="font-bold text-gray-900 text-base lg:text-lg">Markdown入力</span>
-            <div className="flex gap-2 lg:gap-3 w-full sm:w-auto">
-              <button
-                onClick={handleClear}
-                className="px-3 lg:px-4 py-2 text-sm lg:text-base font-medium text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 rounded-lg transition-colors shadow-sm flex-1 sm:flex-none"
-              >
-                クリア
-              </button>
-              <button
-                onClick={handleOpenHtml}
-                disabled={isLoading}
-                className={`px-3 lg:px-4 py-2 text-sm lg:text-base font-medium rounded-lg transition-colors shadow-sm flex-1 sm:flex-none ${
-                  isLoading
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
-                }`}
-              >
-                {isLoading ? "生成中..." : "新規タブで表示"}
-              </button>
-            </div>
+        <div className="w-full lg:w-1/2 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 flex items-center justify-between border-b border-gray-200">
+            <span className="font-semibold text-gray-700 text-sm">入力</span>
+            <button
+              onClick={handleClear}
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all"
+              title="クリア"
+            >
+              クリア
+            </button>
           </div>
           <textarea
-            className="flex-1 p-4 font-mono text-base text-gray-900 resize-none border-none outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset leading-relaxed min-h-96 lg:min-h-0"
+            className="flex-1 p-5 font-mono text-sm text-gray-800 resize-none border-none outline-none focus:ring-0 leading-relaxed min-h-96 lg:min-h-0"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
             placeholder={SAMPLE_PLACEHOLDER}
@@ -362,48 +343,49 @@ export default function Home() {
         </div>
 
         {/* 右側: 結果表示エリア */}
-        <div className="w-full lg:w-1/2 flex flex-col bg-white border-t-2 lg:border-t-0 border-gray-300">
+        <div className="w-full lg:w-1/2 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           {/* タブ */}
-          <div className="bg-blue-50 border-b-2 border-blue-200 px-3 lg:px-4 py-3">
-            <div className="flex gap-1 lg:gap-2 overflow-x-auto">
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex gap-2">
               {[
                 { key: 'html' as ViewMode, label: 'プレビュー' },
-                { key: 'source' as ViewMode, label: 'HTMLソース' },
-                { key: 'debug' as ViewMode, label: 'デバッグ' },
+                { key: 'source' as ViewMode, label: 'ソース' },
               ].map(({ key, label }) => (
                 <button
                   key={key}
                   onClick={() => setViewMode(key)}
-                  className={`px-3 lg:px-4 py-2 text-sm lg:text-base font-medium rounded-lg transition-colors whitespace-nowrap ${
+                  className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${
                     viewMode === key
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "text-gray-700 hover:text-gray-900 hover:bg-white border-2 border-gray-300"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-white"
                   }`}
                 >
                   {label}
                 </button>
               ))}
             </div>
+            <button
+              onClick={handleOpenHtml}
+              disabled={isLoading}
+              className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                isLoading
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md"
+              }`}
+              title="印刷用ウィンドウを開く"
+            >
+              {isLoading ? "..." : "プリント"}
+            </button>
           </div>
 
           {/* 結果表示 */}
-          <div className="flex-1 overflow-auto bg-white min-h-96 lg:min-h-0">
+          <div className="flex-1 overflow-auto min-h-96 lg:min-h-0">
             {viewMode === 'html' && (
               <MarkdownPreview html={html} />
             )}
             {viewMode === 'source' && (
-              <pre className="p-4 text-base font-mono text-gray-900 whitespace-pre-wrap bg-gray-50 h-full leading-relaxed">
+              <pre className="p-5 text-xs font-mono text-gray-700 whitespace-pre-wrap bg-gray-50 h-full leading-relaxed">
                 {sourceHtml}
-              </pre>
-            )}
-            {viewMode === 'debug' && (
-              <pre className="p-4 text-base font-mono text-gray-700 bg-gray-50 h-full leading-relaxed">
-                {JSON.stringify({
-                  options,
-                  markdownLength: markdown.length,
-                  htmlLength: html.length,
-                  timestamp: new Date().toISOString()
-                }, null, 2)}
               </pre>
             )}
           </div>

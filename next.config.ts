@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 開発環境でのクロスオリジンリクエストを許可
+  allowedDevOrigins: [
+    'http://192.168.100.18:3000',
+    'http://localhost:3000',
+  ],
   // Vercel環境変数の設定
   env: {
     // Vercel環境でPuppeteerを使用するための設定

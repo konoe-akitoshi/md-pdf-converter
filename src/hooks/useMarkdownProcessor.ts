@@ -4,7 +4,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkRehype from "remark-rehype";
-import rehypeMathjax from "rehype-mathjax";
+import rehypeKatex from "rehype-katex";
 import rehypeStringify from "rehype-stringify";
 import { preprocessMath } from "../utils/mathPreprocessor";
 
@@ -23,7 +23,7 @@ export function useMarkdownProcessor(markdown: string) {
           .use(remarkGfm)
           .use(remarkMath)
           .use(remarkRehype)
-          .use(rehypeMathjax)
+          .use(rehypeKatex)
           .use(rehypeStringify)
           .process(processedMarkdown);
 
